@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>25:00 - 準備專注 | 番茄鐘</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts (Noto Sans TC & JetBrains Mono 用於等寬數字) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Inter"', '"Noto Sans TC"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body id="app-body" class="min-h-screen transition-colors duration-500 ease-in-out bg-rose-50 text-slate-800 flex flex-col items-center justify-between p-4 sm:p-6 select-none">
+
+    <!-- 頂部導覽列 -->
+    <header class="w-full max-w-md flex items-center justify-between py-2">
+        <div class="flex items-center gap-2.5">
+            <!-- 番茄圖示 SVG -->
+            <div id="brand-icon" class="w-9 h-9 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-sm transition-colors duration-500">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="13" r="8"></circle>
+                    <path d="M12 5c-1.5-2-4-2-4-2s1 2 4 2c3 0 4-2 4-2s-2.5 0-4 2z"></path>
+                    <path d="M12 9v4l2.5 1.5"></path>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-800">番茄鐘</h1>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <!-- 靜音/音效開關按鈕 -->
+            <button id="btn-mute" type="button" aria-label="切換提示音" title="切換提示音" class="p-2.5 rounded-xl bg-white/80 hover:bg-white text-slate-600 shadow-sm border border-slate-200/60 transition active:scale-95">
+                <!-- 音效開啟圖示 -->
+                <svg id="icon-sound-on" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                </svg>
+                <!-- 音效靜音圖示 (預設隱藏) -->
+                <svg id="icon-sound-off" class="w-5 h-5 hidden text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            </button>
+
+            <!-- 設定按鈕 -->
+            <button id="btn-settings" type="button" aria-label="開啟設定" title="時間與偏好設定" class="p-2.5 rounded-xl bg-white/80 hover:bg-white text-slate-600 shadow-sm border border-slate-200/60 transition active:scale-95 flex items-center gap-1.5 text-sm font-medium">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                <span class="hidden sm:inline">設定</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 主要計時卡片容器 -->
+    <main class="w-full max-w-md my-auto">
+        <div class="bg-white/90 backdrop-blur-md rounded-3xl shadow-xl shadow-slate-200/50 border border-white p-6 sm:p-8 transition-all duration-500">
+            
+            <!-- 模式切換標籤列 -->
+            <div class="grid grid-cols-3 gap-1.5 p-1.5 bg-slate-100/90 rounded-2xl mb-6" role="tablist">
+                <button type="button" data-mode="focus" class="mode-tab py-2.5 px-2 rounded-xl text-sm font-bold transition-all duration-200 bg-white text-rose-600 shadow-sm">
+                    專注時間
+                </button>
+                <button type="button" data-mode="shortBreak" class="mode-tab py-2.5 px-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 transition-all duration-200">
+                    短休息
+                </button>
+                <button type="button" data-mode="longBreak" class="mode-tab py-2.5 px-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 transition-all duration-200">
+                    長休息
+                </button>
+            </div>
+
+            <!-- 圓形進度環與大字時間顯示 -->
+            <div class="relative flex items-center justify-center my-4 sm:my-6">
+                <!-- SVG 圓形進度條 -->
+                <svg class="w-64 h-64 sm:w-72 sm:h-72 transform -rotate-90" viewBox="0 0 260 260">
+                    <!-- 背景底環 -->
+                    <circle cx="130" cy="130" r="116" stroke="currentColor" stroke-width="10" fill="transparent" class="text-slate-100" />
+                    <!-- 動態進度環 (周長 = 2 * π * 116 ≈ 728.85) -->
+                    <circle id="progress-ring" cx="130" cy="130" r="116" stroke="currentColor" stroke-width="10" stroke-linecap="round" fill="transparent"
+                            stroke-dasharray="728.85" stroke-dashoffset="0"
+                            class="text-rose-500 transition-all duration-300 ease-out" />
+                </svg>
+
+                <!-- 中央時間與狀態文字 -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                    <span id="status-badge" class="px-3 py-1 rounded-full text-xs font-semibold tracking-wider uppercase bg-rose-100 text-rose-600 mb-2 transition-colors duration-300">
+                        準備開始專注
+                    </span>
+                    <div id="time-display" class="font-mono text-6xl sm:text-7xl font-bold tracking-tight text-slate-800 tabular-nums">
+                        25:00
+                    </div>
+                    <!-- 番茄循環進度指示點 -->
+                    <div class="mt-3 flex flex-col items-center gap-1.5">
+                        <div id="pomodoro-dots" class="flex items-center gap-2" title="每完成 4 個專注循環將進入長休息">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-colors duration-300"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-colors duration-300"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-colors duration-300"></span>
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-200 transition-colors duration-300"></span>
+                        </div>
+                        <span id="cycle-text" class="text-xs font-medium text-slate-400">
+                            第 1 / 4 個專注循環
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 主要控制按鈕列 (適合手機觸控的大按鈕) -->
+            <div class="flex items-center justify-center gap-3 mt-6">
+                <!-- 開始 / 暫停 主按鈕 -->
+                <button id="btn-toggle" type="button" class="flex-1 py-4 px-6 rounded-2xl bg-rose-500 hover:bg-rose-600 active:scale-[0.98] text-white font-bold text-lg shadow-lg shadow-rose-500/25 transition-all duration-200 flex items-center justify-center gap-2">
+                    <svg id="icon-play" class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+                        <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                    </svg>
+                    <svg id="icon-pause" class="w-6 h-6 fill-current hidden" viewBox="0 0 24 24">
+                        <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+                        <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+                    </svg>
+                    <span id="btn-toggle-text">開始</span>
+                </button>
+
+                <!-- 重設按鈕 -->
+                <button id="btn-reset" type="button" title="重設目前階段時間" aria-label="重設" class="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-600 font-semibold transition-all duration-200 flex items-center justify-center">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                    </svg>
+                </button>
+
+                <!-- 跳過至下一階段按鈕 -->
+                <button id="btn-skip" type="button" title="直接進入下一階段" aria-label="跳過此階段" class="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-600 font-semibold transition-all duration-200 flex items-center justify-center">
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                        <line x1="19" y1="5" x2="19" y2="19"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 底部統計與自動切換選項 -->
+            <div class="mt-6 pt-5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs sm:text-sm text-slate-500">
+                <div class="flex items-center gap-1.5">
+                    <span>今日已完成：</span>
+                    <span id="total-completed" class="font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-lg">0</span>
+                    <span>顆番茄</span>
+                </div>
+
+                <label class="inline-flex items-center gap-2 cursor-pointer">
+                    <input id="chk-auto-start" type="checkbox" checked class="w-4 h-4 rounded text-rose-500 focus:ring-rose-500 border-slate-300 cursor-pointer">
+                    <span>時間到自動開始</span>
+                </label>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部提示文字 -->
+    <footer class="w-full max-w-md text-center py-2 text-xs text-slate-400">
+        每完成 4 次專注，自動進入 15 分鐘長休息
+    </footer>
+
+    <!-- Toast 訊息通知框 (取代 alert) -->
+    <div id="toast-container" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <div id="toast-message" class="bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-2xl shadow-lg flex items-center gap-2 whitespace-nowrap">
+            <span>🔔</span>
+            <span id="toast-text">時間到！</span>
+        </div>
+    </div>
+
+    <!-- 設定 Modal 彈窗 -->
+    <div id="settings-modal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100 animate-fade-in">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                <h2 class="text-lg font-bold text-slate-800">計時器設定</h2>
+                <button id="btn-close-settings" type="button" class="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <!-- 時間設定輸入群組 -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">時間長度（分鐘）</label>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/70">
+                            <label for="input-focus" class="block text-xs font-medium text-slate-600 mb-1">專注</label>
+                            <input id="input-focus" type="number" min="1" max="120" value="25" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-center font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/70">
+                            <label for="input-short" class="block text-xs font-medium text-slate-600 mb-1">短休息</label>
+                            <input id="input-short" type="number" min="1" max="60" value="5" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-center font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/70">
+                            <label for="input-long" class="block text-xs font-medium text-slate-600 mb-1">長休息</label>
+                            <input id="input-long" type="number" min="1" max="90" value="15" class="w-full bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-center font-mono font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 音效測試與重設循環 -->
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button id="btn-test-sound" type="button" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                        </svg>
+                        試聽提示音
+                    </button>
+
+                    <button id="btn-reset-stats" type="button" class="px-3.5 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-semibold transition">
+                        歸零今日紀錄
+                    </button>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button id="btn-restore-default" type="button" class="px-4 py-2.5 rounded-xl text-slate-500 hover:text-slate-700 text-sm font-medium transition mr-auto">
+                    恢復預設值
+                </button>
+                <button id="btn-save-settings" type="button" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold shadow-sm transition active:scale-95">
+                    儲存設定
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 番茄鐘核心應用程式邏輯
+         * 包含：精準時間戳記倒數、Web Audio API 離線提示音效、狀態持久化、響應式主題切換
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- 1. 狀態與設定初始化 ---
+            const STORAGE_KEY = 'pomodoro_app_state_v1';
+            const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * 116; // SVG 圓環周長 ≈ 728.85
+
+            // 預設設定
+            const defaultSettings = {
+                focus: 25,
+                shortBreak: 5,
+                longBreak: 15,
+                autoStart: true,
+                muted: false
+            };
+
+            // 應用程式狀態
+            let state = {
+                settings: { ...defaultSettings },
+                mode: 'focus', // 'focus' | 'shortBreak' | 'longBreak'
+                remainingSeconds: 25 * 60,
+                totalSeconds: 25 * 60,
+                isRunning: false,
+                completedInCycle: 0, // 0 ~ 3，滿 4 進入長休息
+                totalCompletedToday: 0,
+                lastDate: new Date().toDateString()
+            };
+
+            let timerInterval = null;
+            let expectedEndTime = null;
+            let audioCtx = null;
+            let toastTimeout = null;
+
+            // --- 2. DOM 元素快取 ---
+            const els = {
+                body: document.getElementById('app-body'),
+                brandIcon: document.getElementById('brand-icon'),
+                modeTabs: document.querySelectorAll('.mode-tab'),
+                progressRing: document.getElementById('progress-ring'),
+                statusBadge: document.getElementById('status-badge'),
+                timeDisplay: document.getElementById('time-display'),
+                pomodoroDots: document.getElementById('pomodoro-dots').children,
+                cycleText: document.getElementById('cycle-text'),
+                btnToggle: document.getElementById('btn-toggle'),
+                btnToggleText: document.getElementById('btn-toggle-text'),
+                iconPlay: document.getElementById('icon-play'),
+                iconPause: document.getElementById('icon-pause'),
+                btnReset: document.getElementById('btn-reset'),
+                btnSkip: document.getElementById('btn-skip'),
+                totalCompleted: document.getElementById('total-completed'),
+                chkAutoStart: document.getElementById('chk-auto-start'),
+                btnMute: document.getElementById('btn-mute'),
+                iconSoundOn: document.getElementById('icon-sound-on'),
+                iconSoundOff: document.getElementById('icon-sound-off'),
+                // 設定彈窗元素
+                btnSettings: document.getElementById('btn-settings'),
+                settingsModal: document.getElementById('settings-modal'),
+                btnCloseSettings: document.getElementById('btn-close-settings'),
+                inputFocus: document.getElementById('input-focus'),
+                inputShort: document.getElementById('input-short'),
+                inputLong: document.getElementById('input-long'),
+                btnTestSound: document.getElementById('btn-test-sound'),
+                btnResetStats: document.getElementById('btn-reset-stats'),
+                btnRestoreDefault: document.getElementById('btn-restore-default'),
+                btnSaveSettings: document.getElementById('btn-save-settings'),
+                // Toast 元素
+                toastContainer: document.getElementById('toast-container'),
+                toastText: document.getElementById('toast-text')
+            };
+
+            // 主題色票設定 (專注：暖紅、短休息：清新綠、長休息：寧靜藍)
+            const themes = {
+                focus: {
+                    name: '專注時間',
+                    runningLabel: '專注進行中',
+                    pausedLabel: '準備開始專注',
+                    bodyBg: 'bg-rose-50',
+                    brandBg: 'bg-rose-500',
+                    ringText: 'text-rose-500',
+                    badgeBg: 'bg-rose-100',
+                    badgeText: 'text-rose-600',
+                    tabActiveText: 'text-rose-600',
+                    btnBg: 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/25',
+                    dotActive: 'bg-rose-500',
+                    checkboxText: 'text-rose-500 focus:ring-rose-500'
+                },
+                shortBreak: {
+                    name: '短休息',
+                    runningLabel: '短休息放鬆中',
+                    pausedLabel: '準備短休息',
+                    bodyBg: 'bg-emerald-50',
+                    brandBg: 'bg-emerald-500',
+                    ringText: 'text-emerald-500',
+                    badgeBg: 'bg-emerald-100',
+                    badgeText: 'text-emerald-700',
+                    tabActiveText: 'text-emerald-600',
+                    btnBg: 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/25',
+                    dotActive: 'bg-emerald-500',
+                    checkboxText: 'text-emerald-500 focus:ring-emerald-500'
+                },
+                longBreak: {
+                    name: '長休息',
+                    runningLabel: '長休息充電中',
+                    pausedLabel: '準備長休息',
+                    bodyBg: 'bg-sky-50',
+                    brandBg: 'bg-sky-500',
+                    ringText: 'text-sky-500',
+                    badgeBg: 'bg-sky-100',
+                    badgeText: 'text-sky-700',
+                    tabActiveText: 'text-sky-600',
+                    btnBg: 'bg-sky-500 hover:bg-sky-600 shadow-sky-500/25',
+                    dotActive: 'bg-sky-500',
+                    checkboxText: 'text-sky-500 focus:ring-sky-500'
+                }
+            };
+
+            // --- 3. LocalStorage 資料載入與儲存 ---
+            function loadState() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        state.settings = { ...defaultSettings, ...(parsed.settings || {}) };
+                        
+                        // 檢查是否跨日，若跨日則重置今日完成數
+                        const today = new Date().toDateString();
+                        if (parsed.lastDate === today) {
+                            state.totalCompletedToday = parsed.totalCompletedToday || 0;
+                            state.completedInCycle = parsed.completedInCycle || 0;
+                        } else {
+                            state.totalCompletedToday = 0;
+                            state.completedInCycle = 0;
+                        }
+                        state.lastDate = today;
+                    }
+                } catch (e) {
+                    console.warn('無法讀取儲存的設定:', e);
+                }
+                // 初始化目前模式的秒數
+                state.totalSeconds = state.settings[state.mode] * 60;
+                state.remainingSeconds = state.totalSeconds;
+            }
+
+            function saveState() {
+                try {
+                    const dataToSave = {
+                        settings: state.settings,
+                        completedInCycle: state.completedInCycle,
+                        totalCompletedToday: state.totalCompletedToday,
+                        lastDate: new Date().toDateString()
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+                } catch (e) {
+                    console.warn('無法儲存設定:', e);
+                }
+            }
+
+            // --- 4. Web Audio API 離線提示音效合成 ---
+            function playNotificationSound(type = 'complete') {
+                if (state.settings.muted) return;
+
+                try {
+                    if (!audioCtx) {
+                        const AudioContext = window.AudioContext || window.webkitAudioContext;
+                        audioCtx = new AudioContext();
+                    }
+                    if (audioCtx.state === 'suspended') {
+                        audioCtx.resume();
+                    }
+
+                    const now = audioCtx.currentTime;
+                    // 悅耳的三和弦鈴聲頻率 (C5, E5, G5, C6)
+                    const notes = type === 'longBreak' 
+                        ? [523.25, 659.25, 783.99, 1046.50] // 長休息：四音上行歡快和弦
+                        : [587.33, 880.00]; // 一般切換：清脆雙音提示 (D5 -> A5)
+
+                    notes.forEach((freq, index) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + index * 0.16);
+
+                        // 柔和的音量包絡線 (Envelope) 避免爆音
+                        gain.gain.setValueAtTime(0.001, now + index * 0.16);
+                        gain.gain.exponentialRampToValueAtTime(0.25, now + index * 0.16 + 0.03);
+                        gain.gain.exponentialRampToValueAtTime(0.0001, now + index * 0.16 + 0.65);
+
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+
+                        osc.start(now + index * 0.16);
+                        osc.stop(now + index * 0.16 + 0.7);
+                    });
+                } catch (err) {
+                    console.warn('音訊播放受限:', err);
+                }
+            }
+
+            // --- 5. UI 更新與渲染 ---
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            }
+
+            function showToast(message) {
+                els.toastText.textContent = message;
+                els.toastContainer.classList.remove('opacity-0', 'translate-y-4');
+                els.toastContainer.classList.add('opacity-100', 'translate-y-0');
+
+                clearTimeout(toastTimeout);
+                toastTimeout = setTimeout(() => {
+                    els.toastContainer.classList.remove('opacity-100', 'translate-y-0');
+                    els.toastContainer.classList.add('opacity-0', 'translate-y-4');
+                }, 3500);
+            }
+
+            function updateUI() {
+                const theme = themes[state.mode];
+                const formatted = formatTime(state.remainingSeconds);
+
+                // 1. 更新時間文字與分頁標題
+                els.timeDisplay.textContent = formatted;
+                const statusTitle = state.isRunning ? theme.name : `${theme.name}(暫停)`;
+                document.title = `${formatted} - ${statusTitle} | 番茄鐘`;
+
+                // 2. 更新圓形進度條
+                const progress = state.totalSeconds > 0 
+                    ? (state.totalSeconds - state.remainingSeconds) / state.totalSeconds 
+                    : 0;
+                const offset = CIRCLE_CIRCUMFERENCE * progress;
+                els.progressRing.style.strokeDashoffset = offset;
+
+                // 3. 套用模式色彩主題
+                els.body.className = `min-h-screen transition-colors duration-500 ease-in-out ${theme.bodyBg} text-slate-800 flex flex-col items-center justify-between p-4 sm:p-6 select-none`;
+                els.brandIcon.className = `w-9 h-9 rounded-xl ${theme.brandBg} text-white flex items-center justify-center shadow-sm transition-colors duration-500`;
+                els.progressRing.className = `${theme.ringText} transition-all duration-300 ease-out`;
+                
+                els.statusBadge.textContent = state.isRunning ? theme.runningLabel : theme.pausedLabel;
+                els.statusBadge.className = `px-3 py-1 rounded-full text-xs font-semibold tracking-wider ${theme.badgeBg} ${theme.badgeText} mb-2 transition-colors duration-300`;
+
+                els.btnToggle.className = `flex-1 py-4 px-6 rounded-2xl ${theme.btnBg} active:scale-[0.98] text-white font-bold text-lg shadow-lg transition-all duration-200 flex items-center justify-center gap-2`;
+                els.chkAutoStart.className = `w-4 h-4 rounded ${theme.checkboxText} border-slate-300 cursor-pointer`;
+
+                // 4. 更新模式切換分頁樣式
+                els.modeTabs.forEach(tab => {
+                    const isSelected = tab.dataset.mode === state.mode;
+                    if (isSelected) {
+                        tab.className = `mode-tab py-2.5 px-2 rounded-xl text-sm font-bold transition-all duration-200 bg-white ${theme.tabActiveText} shadow-sm`;
+                    } else {
+                        tab.className = `mode-tab py-2.5 px-2 rounded-xl text-sm font-medium text-slate-500 hover:text-slate-800 transition-all duration-200`;
+                    }
+                });
+
+                // 5. 更新開始/暫停按鈕狀態
+                if (state.isRunning) {
+                    els.btnToggleText.textContent = '暫停';
+                    els.iconPlay.classList.add('hidden');
+                    els.iconPause.classList.remove('hidden');
+                } else {
+                    els.btnToggleText.textContent = '開始';
+                    els.iconPlay.classList.remove('hidden');
+                    els.iconPause.classList.add('hidden');
+                }
+
+                // 6. 更新番茄循環點點 (1~4)
+                Array.from(els.pomodoroDots).forEach((dot, idx) => {
+                    if (idx < state.completedInCycle) {
+                        dot.className = `w-2.5 h-2.5 rounded-full ${theme.dotActive} transition-colors duration-300`;
+                    } else {
+                        dot.className = `w-2.5 h-2.5 rounded-full bg-slate-200 transition-colors duration-300`;
+                    }
+                });
+
+                const currentCycleDisplay = state.mode === 'longBreak' ? 4 : Math.min(state.completedInCycle + 1, 4);
+                els.cycleText.textContent = state.mode === 'longBreak' 
+                    ? '已完成 4 個專注，享受長休息吧！' 
+                    : `第 ${currentCycleDisplay} / 4 個專注循環`;
+
+                // 7. 更新統計與偏好狀態
+                els.totalCompleted.textContent = state.totalCompletedToday;
+                els.chkAutoStart.checked = state.settings.autoStart;
+
+                if (state.settings.muted) {
+                    els.iconSoundOn.classList.add('hidden');
+                    els.iconSoundOff.classList.remove('hidden');
+                } else {
+                    els.iconSoundOn.classList.remove('hidden');
+                    els.iconSoundOff.classList.add('hidden');
+                }
+            }
+
+            // --- 6. 計時器核心控制 ---
+            function startTimer() {
+                if (state.isRunning) return;
+
+                // 解鎖瀏覽器 AudioContext (必須在使用者互動事件中觸發)
+                if (!audioCtx && !state.settings.muted) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                }
+
+                state.isRunning = true;
+                // 使用精確時間戳避免背景分頁節流導致計時變慢
+                expectedEndTime = Date.now() + state.remainingSeconds * 1000;
+
+                timerInterval = setInterval(() => {
+                    const now = Date.now();
+                    const left = Math.round((expectedEndTime - now) / 1000);
+
+                    if (left <= 0) {
+                        state.remainingSeconds = 0;
+                        updateUI();
+                        handleTimerComplete();
+                    } else if (left !== state.remainingSeconds) {
+                        state.remainingSeconds = left;
+                        updateUI();
+                    }
+                }, 250);
+
+                updateUI();
+            }
+
+            function pauseTimer() {
+                if (!state.isRunning) return;
+                state.isRunning = false;
+                clearInterval(timerInterval);
+                timerInterval = null;
+                updateUI();
+            }
+
+            function resetTimer() {
+                pauseTimer();
+                state.totalSeconds = state.settings[state.mode] * 60;
+                state.remainingSeconds = state.totalSeconds;
+                updateUI();
+            }
+
+            function switchMode(newMode, autoStartNext = false) {
+                pauseTimer();
+                state.mode = newMode;
+                state.totalSeconds = state.settings[newMode] * 60;
+                state.remainingSeconds = state.totalSeconds;
+                updateUI();
+
+                if (autoStartNext) {
+                    startTimer();
+                }
+            }
+
+            /**
+             * 處理計時結束後的自動切換與長休息邏輯
+             */
+            function handleTimerComplete() {
+                pauseTimer();
+
+                if (state.mode === 'focus') {
+                    // 完成一個專注階段
+                    state.completedInCycle += 1;
+                    state.totalCompletedToday += 1;
+                    saveState();
+
+                    if (state.completedInCycle >= 4) {
+                        // 每完成 4 個專注，進入 15 分鐘長休息
+                        playNotificationSound('longBreak');
+                        showToast('🎉 太棒了！完成 4 個專注，進入長休息時間');
+                        switchMode('longBreak', state.settings.autoStart);
+                    } else {
+                        // 進入短休息
+                        playNotificationSound('complete');
+                        showToast(`🍅 專注完成！休息 ${state.settings.shortBreak} 分鐘吧`);
+                        switchMode('shortBreak', state.settings.autoStart);
+                    }
+                } else if (state.mode === 'shortBreak') {
+                    // 短休息結束，回到專注
+                    playNotificationSound('complete');
+                    showToast('⚡ 休息結束，準備開始下一輪專注！');
+                    switchMode('focus', state.settings.autoStart);
+                } else if (state.mode === 'longBreak') {
+                    // 長休息結束，重置循環計數並回到專注
+                    state.completedInCycle = 0;
+                    saveState();
+                    playNotificationSound('complete');
+                    showToast('🌟 長休息結束，開啟新一輪專注循環！');
+                    switchMode('focus', state.settings.autoStart);
+                }
+            }
+
+            // --- 7. 事件監聽綁定 ---
+            // 開始 / 暫停按鈕
+            els.btnToggle.addEventListener('click', () => {
+                if (state.isRunning) {
+                    pauseTimer();
+                } else {
+                    startTimer();
+                }
+            });
+
+            // 重設按鈕
+            els.btnReset.addEventListener('click', () => {
+                resetTimer();
+                showToast('已重設目前階段時間');
+            });
+
+            // 跳過階段按鈕
+            els.btnSkip.addEventListener('click', () => {
+                if (state.mode === 'focus') {
+                    // 手動跳過專注時，不計入完成數，直接切換至休息
+                    const nextMode = (state.completedInCycle + 1 >= 4) ? 'longBreak' : 'shortBreak';
+                    switchMode(nextMode, false);
+                    showToast(`已切換至${themes[nextMode].name}`);
+                } else {
+                    if (state.mode === 'longBreak') {
+                        state.completedInCycle = 0;
+                        saveState();
+                    }
+                    switchMode('focus', false);
+                    showToast('已切換至專注時間');
+                }
+            });
+
+            // 頂部模式標籤點擊切換
+            els.modeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetMode = tab.dataset.mode;
+                    if (targetMode !== state.mode) {
+                        switchMode(targetMode, false);
+                    }
+                });
+            });
+
+            // 自動開始勾選框
+            els.chkAutoStart.addEventListener('change', (e) => {
+                state.settings.autoStart = e.target.checked;
+                saveState();
+            });
+
+            // 靜音切換按鈕
+            els.btnMute.addEventListener('click', () => {
+                state.settings.muted = !state.settings.muted;
+                saveState();
+                updateUI();
+                if (!state.settings.muted) {
+                    playNotificationSound('complete');
+                    showToast('提示音已開啟');
+                } else {
+                    showToast('提示音已靜音');
+                }
+            });
+
+            // --- 設定 Modal 控制 ---
+            function openSettingsModal() {
+                els.inputFocus.value = state.settings.focus;
+                els.inputShort.value = state.settings.shortBreak;
+                els.inputLong.value = state.settings.longBreak;
+                els.settingsModal.classList.remove('hidden');
+                els.settingsModal.classList.add('flex');
+            }
+
+            function closeSettingsModal() {
+                els.settingsModal.classList.add('hidden');
+                els.settingsModal.classList.remove('flex');
+            }
+
+            els.btnSettings.addEventListener('click', openSettingsModal);
+            els.btnCloseSettings.addEventListener('click', closeSettingsModal);
+
+            // 點擊背景遮罩關閉彈窗
+            els.settingsModal.addEventListener('click', (e) => {
+                if (e.target === els.settingsModal) {
+                    closeSettingsModal();
+                }
+            });
+
+            // 試聽提示音
+            els.btnTestSound.addEventListener('click', () => {
+                const wasMuted = state.settings.muted;
+                state.settings.muted = false;
+                playNotificationSound('longBreak');
+                state.settings.muted = wasMuted;
+            });
+
+            // 歸零今日紀錄
+            els.btnResetStats.addEventListener('click', () => {
+                state.totalCompletedToday = 0;
+                state.completedInCycle = 0;
+                saveState();
+                updateUI();
+                showToast('今日番茄紀錄已歸零');
+            });
+
+            // 恢復預設時間
+            els.btnRestoreDefault.addEventListener('click', () => {
+                els.inputFocus.value = defaultSettings.focus;
+                els.inputShort.value = defaultSettings.shortBreak;
+                els.inputLong.value = defaultSettings.longBreak;
+            });
+
+            // 儲存設定
+            els.btnSaveSettings.addEventListener('click', () => {
+                const newFocus = Math.max(1, Math.min(120, parseInt(els.inputFocus.value, 10) || 25));
+                const newShort = Math.max(1, Math.min(60, parseInt(els.inputShort.value, 10) || 5));
+                const newLong = Math.max(1, Math.min(90, parseInt(els.inputLong.value, 10) || 15));
+
+                state.settings.focus = newFocus;
+                state.settings.shortBreak = newShort;
+                state.settings.longBreak = newLong;
+                saveState();
+
+                // 若目前計時器未在執行中，立即更新當前階段剩餘時間
+                if (!state.isRunning) {
+                    state.totalSeconds = state.settings[state.mode] * 60;
+                    state.remainingSeconds = state.totalSeconds;
+                }
+
+                updateUI();
+                closeSettingsModal();
+                showToast('設定已儲存！');
+            });
+
+            // 鍵盤快捷鍵支援 (空白鍵開始/暫停，Esc 關閉設定)
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !els.settingsModal.classList.contains('hidden')) {
+                    closeSettingsModal();
+                    return;
+                }
+                if (e.code === 'Space' && els.settingsModal.classList.contains('hidden') && document.activeElement.tagName !== 'BUTTON') {
+                    e.preventDefault();
+                    state.isRunning ? pauseTimer() : startTimer();
+                }
+            });
+
+            // --- 8. 啟動初始化 ---
+            loadState();
+            updateUI();
+        });
+    </script>
+</body>
+</html>
